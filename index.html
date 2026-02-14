@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For You 💖</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@400;600&display=swap');
+
+        :root {
+            --pink-light: #fff1f2;
+            --pink-medium: #f43f5e;
+            --pink-dark: #be123c;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--pink-light);
+            color: var(--pink-dark);
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #root { width: 100%; display: flex; justify-content: center; }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            padding: 25px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(244, 63, 94, 0.2);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .cursive { font-family: 'Dancing Script', cursive; font-size: 2.2rem; color: var(--pink-medium); margin-bottom: 15px; }
+
+        .btn {
+            background: var(--pink-medium);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+            transition: 0.3s;
+            margin-top: 15px;
+        }
+
+        .btn:hover { transform: scale(1.05); background: var(--pink-dark); }
+
+        /* Floating Hearts Background */
+        .hearts { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .heart { position: absolute; color: var(--pink-medium); opacity: 0.6; animation: float 6s infinite linear; }
+        @keyframes float {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Memory Game */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
+        .cell { height: 60px; background: #ffe4e6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; }
+
+        /* Prank Button */
+        .prank-btn { position: fixed; transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000; }
+
+        /* Photo Slider */
+        .slider { width: 100%; height: 250px; border-radius: 20px; object-fit: cover; margin-top: 15px; border: 3px solid #ffe4e6; }
+    </style>
+</head>
+<body>
+
+    <div id="root">
+        <div style="font-family: sans-serif; color: #f43f5e;">Loading special moment...</div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [step, setStep] = useState(0);
+            const [pos, setPos] = useState({ x: 50, y: 70 });
+            const [count, setCount] = useState(0);
+            const [gameCards, setGameCards] = useState([]);
+            const [selected, setSelected] = useState([]);
+            const [sliderIdx, setSliderIdx] = useState(0);
+            const [love, setLove] = useState(50);
+
+            const photos = [
+                "https://i.postimg.cc/tRrRbx6b/Snapchat-1222784673.jpg",
+                "https://i.postimg.cc/7hXnsNt5/Snapchat-1963261135.jpg",
+                "https://i.postimg.cc/q7nXVrDx/Snapchat-963528480.jpg",
+                "https://i.postimg.cc/nrVvDDF3/Snapchat-287615591.jpg"
+            ];
+
+            const emojis = ["💝", "🌹", "🥰", "💋", "💖", "🎁"];
+
+            // Prank Button Logic
+            const moveBtn = () => {
+                if (count < 8) {
+                    setCount(count + 1);
+                    setPos({ x: 10 + Math.random() * 70, y: 20 + Math.random() * 60 });
+                } else {
+                    setStep(1);
+                }
+            };
+
+            // Game Logic
+            const setupGame = () => {
+                const shuffled = [...emojis, ...emojis]
+                    .sort(() => Math.random() - 0.5)
+                    .map((v, i) => ({ id: i, v, open: false, matched: false }));
+                setGameCards(shuffled);
+                setStep(2);
+            };
+
+            const flip = (i) => {
+                if (gameCards[i].open || gameCards[i].matched || selected.length === 2) return;
+                const newCards = [...gameCards];
+                newCards[i].open = true;
+                setGameCards(newCards);
+                setSelected([...selected, i]);
+            };
+
+            useEffect(() => {
+                if (selected.length === 2) {
+                    const [a, b] = selected;
+                    if (gameCards[a].v === gameCards[b].v) {
+                        setGameCards(prev => prev.map((c, i) => (i === a || i === b ? { ...c, matched: true } : c)));
+                        setSelected([]);
+                    } else {
+                        setTimeout(() => {
+                            setGameCards(prev => prev.map((c, i) => (i === a || i === b ? { ...c, open: false } : c)));
+                            setSelected([]);
+                        }, 600);
+                    }
+                }
+            }, [selected]);
+
+            return (
+                <div style={{width: '100%'}}>
+                    <div className="hearts">
+                        {[...Array(20)].map((_, i) => (
+                            <div key={i} className="heart" style={{left: Math.random()*100+'vw', animationDelay: Math.random()*5+'s'}}>💗</div>
+                        ))}
+                    </div>
+
+                    <div className="container">
+                        {step === 0 && (
+                            <div>
+                                <h1 className="cursive">Surprise Wait Kar Raha Hai! 🎁</h1>
+                                <p>Pehle niche waale button ko pakad ke dikhao!</p>
+                                <button 
+                                    className="btn prank-btn" 
+                                    style={{left: pos.x+'%', top: pos.y+'%', transform: 'translate(-50%, -50%)'}}
+                                    onMouseEnter={moveBtn}
+                                    onClick={moveBtn}
+                                >
+                                    Catch Me! 💖
+                                </button>
+                            </div>
+                        )}
+
+                        {step === 1 && (
+                            <div>
+                                <h1 className="cursive">Will You Be My Valentine? 💘</h1>
+                                <p>Aapke liye kuch moments pack kiye hain...</p>
+                                <button className="btn" onClick={setupGame}>Open Surprise ❤️</button>
+                            </div>
+                        )}
+
+                        {step === 2 && (
+                            <div>
+                                <h2 className="cursive" style={{fontSize: '1.5rem'}}>Match The Pairs 🧩</h2>
+                                <div className="grid">
+                                    {gameCards.map((c, i) => (
+                                        <div key={i} className="cell" onClick={() => flip(i)}>
+                                            {c.open || c.matched ? c.v : "?"}
+                                        </div>
+                                    ))}
+                                </div>
+                                {gameCards.every(c => c.matched) && (
+                                    <button className="btn" onClick={() => setStep(3)}>Next ➜</button>
+                                )}
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div>
+                                <h2 className="cursive">Old Memories 💭</h2>
+                                <img src={photos[sliderIdx]} className="slider" alt="moment" />
+                                <div style={{marginTop: '10px'}}>
+                                    <button className="btn" style={{marginRight: '10px'}} onClick={() => setSliderIdx((sliderIdx + 3) % 4)}>Prev</button>
+                                    <button className="btn" onClick={() => setSliderIdx((sliderIdx + 1) % 4)}>Next</button>
+                                </div>
+                                <button className="btn" style={{display:'block', width: '100%', marginTop: '20px'}} onClick={() => setStep(4)}>Final Letter 💌</button>
+                            </div>
+                        )}
+
+                        {step === 4 && (
+                            <div style={{textAlign: 'left'}}>
+                                <h2 className="cursive" style={{textAlign: 'center'}}>For My Puchkiii 💌</h2>
+                                <p style={{lineHeight: '1.6', fontStyle: 'italic'}}>
+                                    "Hey Puchkiii, <br/><br/>
+                                    Mujhe pata hai main thoda pareshan karta hoon, par sach toh yeh hai ki aapke bina din adhura lagta hai. 
+                                    Aap mere liye bahut special ho. <br/><br/>
+                                    Happy Valentine's Day! 💕"
+                                </p>
+                                <hr border="0" height="1" style={{background: '#ffe4e6', margin: '20px 0'}} />
+                                <p style={{textAlign: 'center'}}>Love Meter: {love}%</p>
+                                <input type="range" style={{width: '100%'}} value={love} onChange={(e)=>setLove(e.target.value)} />
+                                <button className="btn" style={{width: '100%'}} onClick={() => setStep(0)}>Restart 🔄</button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
